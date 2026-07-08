@@ -52,7 +52,6 @@ langchain-anthropic>=0.1.0
 # Utilities
 python-dateutil==2.9.0
 pytz==2024.1
-python-magic==0.4.27
 
 # Elasticsearch client
 elasticsearch[async]==8.13.0
