@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Literal
 
@@ -17,6 +18,16 @@ class Settings(BaseSettings):
 
     # ── Database ─────────────────────────────────────────────────────
     DATABASE_URL: str
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _ensure_asyncpg(cls, v: str) -> str:
+        # Railway provides postgresql:// but asyncpg needs postgresql+asyncpg://
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
 
     # ── Redis ────────────────────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379/0"
