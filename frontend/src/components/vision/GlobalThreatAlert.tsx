@@ -95,13 +95,13 @@ export function GlobalThreatAlert() {
                     {String(toast.event.payload.description || "Threat detected")}
                   </p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    {toast.event.payload.camera_name && (
+                    {!!toast.event.payload.camera_name && (
                       <span className="flex items-center gap-1 text-[10px] text-gray-400">
                         <Radio className="w-2.5 h-2.5" />
                         {String(toast.event.payload.camera_name)}
                       </span>
                     )}
-                    {toast.event.payload.zone && (
+                    {!!toast.event.payload.zone && (
                       <span className="flex items-center gap-1 text-[10px] text-gray-400">
                         <MapPin className="w-2.5 h-2.5" />
                         {String(toast.event.payload.zone)}

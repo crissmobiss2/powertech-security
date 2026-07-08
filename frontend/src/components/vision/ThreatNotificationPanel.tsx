@@ -119,12 +119,12 @@ export function ThreatNotificationPanel({ events, connected, unreadCount, onClea
                         {(evt.payload.description as string) || "Threat event detected"}
                       </p>
                       <div className="flex items-center gap-3 mt-1">
-                        {evt.payload.camera_name && (
+                        {!!evt.payload.camera_name && (
                           <span className="text-[10px] text-gray-500">
                             {String(evt.payload.camera_name)}
                           </span>
                         )}
-                        {evt.payload.zone && (
+                        {!!evt.payload.zone && (
                           <span className="text-[10px] text-gray-600">
                             Zone: {String(evt.payload.zone)}
                           </span>

@@ -108,8 +108,8 @@ export default function ReportsPage() {
             resolved_at: i.resolved_at ?? "",
             sla_due_at: i.sla_due_at ?? "",
             sla_breached: i.sla_due_at && new Date(i.sla_due_at) < new Date(i.resolved_at ?? "9999") ? "yes" : "no",
-            assigned_to: (i as Record<string, unknown>).assigned_to ?? "",
-            client_id: (i as Record<string, unknown>).client_id ?? "",
+            assigned_to: i.assigned_to ?? "",
+            client_id: i.client_id ?? "",
           })),
           `incident_summary_${ts}.csv`,
         );
@@ -144,9 +144,13 @@ export default function ReportsPage() {
             status: a.status,
             channels: Array.isArray(a.channels) ? a.channels.join(";") : "",
             created_at: a.created_at,
-            delivery_rate: a.delivery_stats
-              ? `${((a.delivery_stats as Record<string, number>).sent ?? 0)}/${(a.delivery_stats as Record<string, number>).total ?? 0}`
-              : "",
+            total_recipients: a.total_recipients,
+            sent_count: a.sent_count,
+            delivered_count: a.delivered_count,
+            failed_count: a.failed_count,
+            delivery_rate: a.total_recipients > 0
+              ? `${a.sent_count}/${a.total_recipients}`
+              : "0/0",
           })),
           `alert_delivery_${ts}.csv`,
         );
