@@ -1,0 +1,149 @@
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+
+# Database
+sqlalchemy[asyncio]==2.0.31
+asyncpg==0.29.0
+alembic==1.13.2
+greenlet==3.0.3
+
+# Data validation
+pydantic==2.8.2
+pydantic-settings==2.3.4
+email-validator==2.2.0
+
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+
+# Async HTTP
+httpx==0.27.0
+
+# Task queue
+celery[redis]==5.4.0
+redis==5.0.7
+flower==2.0.1
+
+# Elasticsearch
+elasticsearch[async]==8.13.0
+
+# Notifications
+# SMS via Infobip
+# Email
+aiosmtplib==3.0.1
+jinja2==3.1.4
+
+# Firebase push
+firebase-admin==6.5.0
+
+# AI / Computer Vision — core
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scikit-learn==1.5.1
+supervision==0.22.0
+pillow==10.4.0
+
+# ONNX Runtime (CPU + optional GPU)
+onnxruntime==1.18.1
+# onnxruntime-gpu==1.18.1  # Uncomment for NVIDIA GPU inference
+
+# InsightFace — ArcFace face recognition (buffalo_l model, ~320MB ONNX)
+# Replaces face_recognition/dlib — much higher accuracy, ONNX-backed
+insightface==0.7.3
+
+# Ultralytics YOLO11 — object/weapon/person detection
+ultralytics>=8.3.0
+
+# MediaPipe — pose estimation, hand/body landmark detection
+mediapipe==0.10.14
+
+# DeepFace — deep learning emotion, age, gender analysis
+# Backends: VGG-Face (default), Facenet, Facenet512, OpenFace, DeepFace, DeepID, ArcFace, Dlib
+deepface==0.0.93
+tf-keras>=2.16.0  # DeepFace TF2 backend
+
+# Anomalib — unsupervised anomaly detection for CCTV surveillance
+anomalib>=2.0.0
+
+# faster-whisper — speech-to-text from IP camera audio streams
+# CTranslate2-based, fast CPU inference, Whisper models
+faster-whisper==1.0.3
+
+# LiveKit Python SDK — WebRTC room/token management for live camera streams
+livekit-api>=0.7.2
+
+# LangGraph + LangChain — AI agent orchestration for automated SOAR
+langgraph>=0.2.0
+langchain-core>=0.2.0
+langchain-anthropic>=0.1.0
+
+# HuggingFace Transformers — VideoMAE + TimeSformer video action recognition
+transformers>=4.40.0
+timm>=0.9.0              # ViT/DeiT backbones for VideoMAE and MiVOLO
+
+# CrewAI — multi-agent SOAR orchestration (crew of specialized security agents)
+crewai>=0.80.0
+
+# pyannote.audio — speaker diarization from camera/mic audio streams
+# Requires HF_AUTH_TOKEN and model agreement at huggingface.co/pyannote
+pyannote.audio>=3.3.0
+
+# MiVOLO — full-body age/gender estimation (face + body bounding boxes)
+# Install separately: pip install git+https://github.com/WildChlamydia/MiVOLO.git
+# Falls back to DeepFace if not installed
+
+# ── Top-tier HuggingFace + GitHub AI repos ────────────────────────────────────
+
+# Violence detection — VideoMAE fine-tuned on RWF-2000 fighting dataset
+# HuggingFace: nickmuchi/video-classification-fine-tuned-violence-detection
+# (uses transformers already listed above — no extra install)
+
+# Scene understanding — Florence-2 (caption, VQA, detection, OCR in one model)
+# HuggingFace: microsoft/Florence-2-base-ft (272M, CPU-capable)
+# (uses transformers already listed above — no extra install)
+
+# Person Re-ID — cross-camera tracking (InsightFace embeddings + ByteTrack)
+# ByteTrack is already included via supervision above
+# Deep Person ReID (torchreid): optional — pip install git+https://github.com/KaiyangZhou/deep-person-reid.git
+
+# Grounding DINO — open-vocabulary detection ("person with weapon", "unattended bag")
+# HuggingFace: IDEA-Research/grounding-dino-base (via transformers)
+# (uses transformers already listed above — no extra install)
+
+# Semantic incident similarity search
+sentence-transformers>=3.0.0
+
+# Speaker verification — ECAPA-TDNN (VoxCeleb trained, 192-dim x-vectors)
+# HuggingFace: speechbrain/spkrec-ecapa-voxceleb
+speechbrain>=1.0.0
+
+# Enhanced Whisper — word-level timestamps + forced phoneme alignment
+# GitHub: m-bain/whisperX (superset of faster-whisper)
+whisperx>=3.1.0
+
+# License plate + multi-lingual text OCR (PP-OCRv4, production-grade)
+# GitHub: PaddlePaddle/PaddleOCR
+paddleocr>=2.7.0
+paddlepaddle>=2.6.0
+
+# Utilities
+python-dateutil==2.9.0
+pytz==2024.1
+pillow==10.4.0
+python-magic==0.4.27
+torch>=2.0.0               # already pulled by transformers; explicit pin for ReID + SpeechBrain
+torchaudio>=2.0.0          # needed by SpeechBrain audio loading + resampling
+
+# Dev / test
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-cov==5.0.0
+httpx==0.27.0
+factory-boy==3.3.0
+faker==25.8.0
+
+# Code quality
+ruff==0.5.0
+mypy==1.10.1
