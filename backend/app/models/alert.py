@@ -85,7 +85,7 @@ class AlertRecipient(Base, UUIDPrimaryKeyMixin):
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     acknowledged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
 
     # Relationships
     alert: Mapped["Alert"] = relationship("Alert", back_populates="recipients")

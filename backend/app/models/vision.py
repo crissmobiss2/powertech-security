@@ -29,7 +29,7 @@ class AuthorizedPerson(UUIDPrimaryKeyMixin, TimestampMixin, TenantMixin, Base):
 
     photo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
 
     # Access schedule (e.g., {"days": ["mon","tue",...], "start": "08:00", "end": "18:00"})
     access_schedule: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

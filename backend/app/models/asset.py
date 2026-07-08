@@ -54,7 +54,7 @@ class Asset(Base, UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin, SoftDeleteMi
     last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     last_health_check_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
     # Flexible: camera resolution, NVR channels, server specs, etc.
 
     tags: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True, default=list)

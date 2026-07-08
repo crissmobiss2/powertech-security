@@ -55,7 +55,7 @@ class Incident(Base, UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin):
 
     resolution_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     tags: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True, default=list)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True, default=dict)
+    extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True, default=dict)
 
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -94,7 +94,7 @@ class IncidentTimeline(Base, UUIDPrimaryKeyMixin):
     # alert_sent, ticket_created, playbook_executed, evidence_added, closed
 
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     incident: Mapped["Incident"] = relationship("Incident", back_populates="timeline")

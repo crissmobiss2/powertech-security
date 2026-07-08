@@ -157,7 +157,7 @@ async def add_comment(
         user_id=claims.user_id,
         event_type="commented",
         description=body.description,
-        metadata=body.metadata,
+        extra=body.metadata,
         created_at=datetime.now(timezone.utc),
     )
     db.add(entry)
