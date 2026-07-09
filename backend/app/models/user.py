@@ -46,7 +46,9 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
-    client: Mapped[Optional["Client"]] = relationship("Client", back_populates="users")
+    client: Mapped[Optional["Client"]] = relationship(
+        "Client", back_populates="users", foreign_keys="[User.client_id]"
+    )
     sessions: Mapped[list["UserSession"]] = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
 
     @property

@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { api } from "@/lib/api";
 import { getClaims } from "@/lib/auth";
-import { Settings, User, Bell, Shield, Database, Key, Save, Check } from "lucide-react";
+import type { TokenClaims } from "@/types";
+import { User, Bell, Shield, Database, Key, Save, Check } from "lucide-react";
 
 function SectionCard({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
@@ -28,8 +29,12 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 }
 
 export default function SettingsPage() {
-  const claims = getClaims();
+  const [claims, setClaims] = useState<TokenClaims | null>(null);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setClaims(getClaims());
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: ["me"],

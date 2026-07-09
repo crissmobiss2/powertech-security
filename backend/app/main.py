@@ -12,6 +12,8 @@ from app.api.v1.router import api_v1_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.services.ws_manager import ws_manager
+    from app.scripts.seed_initial_data import seed
+    await seed()
     await ws_manager.start_pubsub_listener()
     yield
     await ws_manager.shutdown()

@@ -42,7 +42,9 @@ class Client(Base, UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin, SoftDeleteM
     notes: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
 
     # Relationships
-    users: Mapped[list["User"]] = relationship("User", back_populates="client")
+    users: Mapped[list["User"]] = relationship(
+        "User", back_populates="client", foreign_keys="[User.client_id]"
+    )
     sites: Mapped[list["Site"]] = relationship("Site", back_populates="client")
     contracts: Mapped[list["Contract"]] = relationship("Contract", back_populates="client")
 

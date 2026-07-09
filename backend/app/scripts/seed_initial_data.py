@@ -4,61 +4,75 @@ Run once after initial migration:
   docker compose exec backend python -m app.scripts.seed_initial_data
 """
 import asyncio
+import logging
 import uuid
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.config import settings
 from app.core.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
 
+log = logging.getLogger(__name__)
+
 
 async def seed():
-    engine = create_async_engine(settings.DATABASE_URL)
-    SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        engine = create_async_engine(settings.DATABASE_URL)
+        SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with SessionLocal() as db:
-        # Check if already seeded
-        from sqlalchemy import select
-        result = await db.execute(select(Tenant).where(Tenant.slug == "powertech"))
-        if result.scalar_one_or_none():
-            print("Already seeded. Skipping.")
-            return
+        async with SessionLocal() as db:
+            from sqlalchemy import select
 
-        tenant = Tenant(
-            id=uuid.uuid4(),
-            name="Power Tech Security Corp",
-            slug="powertech",
-            subscription_tier="enterprise",
-            is_active=True,
-            settings={
-                "timezone": "Asia/Manila",
-                "currency": "PHP",
-                "country": "PH",
-            },
-        )
-        db.add(tenant)
-        await db.flush()
+            # Upsert tenant
+            result = await db.execute(select(Tenant).where(Tenant.slug == "powertech"))
+            tenant = result.scalar_one_or_none()
+            if tenant:
+                log.info("Seed: tenant already exists id=%s", tenant.id)
+            else:
+                tenant = Tenant(
+                    id=uuid.uuid4(),
+                    name="Power Tech Security Corp",
+                    slug="powertech",
+                    subscription_tier="enterprise",
+                    is_active=True,
+                    settings={
+                        "timezone": "Asia/Manila",
+                        "currency": "PHP",
+                        "country": "PH",
+                    },
+                )
+                db.add(tenant)
+                await db.flush()
+                log.info("Seed: tenant created id=%s", tenant.id)
 
-        admin = User(
-            id=uuid.uuid4(),
-            tenant_id=tenant.id,
-            email="admin@powertech.ph",
-            password_hash=hash_password("ChangeMe@2026!"),
-            first_name="System",
-            last_name="Administrator",
-            role="super_admin",
-            status="active",
-        )
-        db.add(admin)
-        await db.commit()
+            # Upsert admin user
+            user_result = await db.execute(
+                select(User).where(User.email == "admin@powertech.ph", User.tenant_id == tenant.id)
+            )
+            admin = user_result.scalar_one_or_none()
+            if admin:
+                log.info("Seed: admin user already exists email=%s", admin.email)
+            else:
+                admin = User(
+                    id=uuid.uuid4(),
+                    tenant_id=tenant.id,
+                    email="admin@powertech.ph",
+                    password_hash=hash_password("ChangeMe@2026!"),
+                    first_name="System",
+                    last_name="Administrator",
+                    role="super_admin",
+                    status="active",
+                )
+                db.add(admin)
+                log.info("Seed: admin user created email=%s", admin.email)
 
-        print(f"Tenant created: {tenant.id}")
-        print(f"Admin user: {admin.email} (password: ChangeMe@2026!)")
-        print("IMPORTANT: Change the default password immediately.")
+            await db.commit()
 
-    await engine.dispose()
+        await engine.dispose()
+    except Exception:
+        log.exception("Seed failed")
 
 
 if __name__ == "__main__":
