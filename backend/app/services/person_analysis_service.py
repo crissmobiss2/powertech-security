@@ -68,6 +68,7 @@ def _get_mivolo():
         import torch
         checkpoint = os.getenv("MIVOLO_CHECKPOINT", "")
         if not checkpoint:
+            logger.debug("MIVOLO_CHECKPOINT not set — MiVOLO disabled, using DeepFace fallback")
             return None
         model = MiVOLO(
             checkpoint,

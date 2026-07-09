@@ -195,6 +195,8 @@ async def enroll_face(
         result = await svc.enroll_face(person_id, body.image_base64, body.is_primary)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except RuntimeError as e:
+        raise HTTPException(503, str(e))
     return FaceEnrollResponse(**result)
 
 

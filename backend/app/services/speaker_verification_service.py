@@ -26,7 +26,7 @@ VERIFICATION_THRESHOLD = 0.25   # cosine similarity score threshold (lower = mor
 MAX_EMBEDDINGS_PER_SPEAKER = 10
 
 SPEECHBRAIN_MODEL_ID = "speechbrain/spkrec-ecapa-voxceleb"
-SPEECHBRAIN_SAVE_DIR = os.getenv("SPEECHBRAIN_SAVE_DIR", "/tmp/speechbrain_models")
+SPEECHBRAIN_SAVE_DIR = os.getenv("SPEECHBRAIN_SAVE_DIR", "/app/models/speechbrain")
 
 _encoder = None
 

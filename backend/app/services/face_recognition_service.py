@@ -319,7 +319,11 @@ class ThreatDetectionService:
     def _get_yolo(self):
         """Lazy-load YOLO11 nano model."""
         if self._yolo_model is None:
-            from ultralytics import YOLO
+            try:
+                from ultralytics import YOLO
+            except ImportError:
+                logger.warning("ultralytics not installed — YOLO threat detection unavailable")
+                return None
             try:
                 self._yolo_model = YOLO("yolo11n.pt")
                 logger.info("YOLO11n loaded")
@@ -334,6 +338,8 @@ class ThreatDetectionService:
         conf_threshold = camera_config.get("detection_confidence_threshold", 0.6)
 
         model = self._get_yolo()
+        if model is None:
+            return []
         results = model(frame, verbose=False, conf=conf_threshold)
 
         person_count = 0
