@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { api } from "@/lib/api";
 import { timeAgo, cn } from "@/lib/utils";
 import type { Playbook } from "@/types";
-import { Zap, Filter, RefreshCw, Plus, Play, ToggleLeft, ToggleRight } from "lucide-react";
+import { Zap, Filter, RefreshCw, Plus, Play, ToggleLeft, ToggleRight, X, Loader2 } from "lucide-react";
 
 const TRIGGER_OPTIONS = ["", "asset_offline", "incident_created", "incident_severity", "scheduled", "manual", "webhook", "threshold"];
 
@@ -35,10 +35,99 @@ function triggerColor(trigger: string): string {
   return map[trigger] ?? "text-gray-400 bg-surface-3";
 }
 
+function CreatePlaybookModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    trigger_type: "manual",
+    enabled: true,
+  });
+  const [error, setError] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: (data: typeof form) =>
+      api.playbooks.create({ ...data, actions: [] }),
+    onSuccess: () => { onSuccess(); onClose(); },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(msg ?? "Failed to create playbook");
+    },
+  });
+
+  function set(field: string, value: string | boolean) {
+    setForm((f) => ({ ...f, [field]: value }));
+    setError("");
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="glass-card rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+          <h2 className="text-base font-semibold text-white">Create playbook</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">Playbook name *</label>
+            <input value={form.name} onChange={(e) => set("name", e.target.value)}
+              className="w-full bg-surface-1 border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500"
+              placeholder="Critical Incident Response" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">Description</label>
+            <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={3}
+              className="w-full bg-surface-1 border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500 resize-none"
+              placeholder="What does this playbook do?" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">Trigger type</label>
+            <select value={form.trigger_type} onChange={(e) => set("trigger_type", e.target.value)}
+              className="w-full bg-surface-1 border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500">
+              {TRIGGER_OPTIONS.filter(Boolean).map((t) => (
+                <option key={t} value={t}>{triggerLabel(t)}</option>
+              ))}
+            </select>
+          </div>
+          <label className="flex items-center justify-between cursor-pointer">
+            <span className="text-xs text-gray-400">Enable immediately</span>
+            <button
+              type="button"
+              onClick={() => set("enabled", !form.enabled)}
+              className={cn(
+                "w-9 h-5 rounded-full transition-colors relative",
+                form.enabled ? "bg-brand-500" : "bg-surface-3"
+              )}
+            >
+              <span className={cn(
+                "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                form.enabled ? "translate-x-4" : "translate-x-0.5"
+              )} />
+            </button>
+          </label>
+          <p className="text-xs text-gray-600">Actions can be added after creation from the playbook detail view.</p>
+          {error && <p className="text-xs text-red-400 bg-red-950/50 px-3 py-2 rounded-lg">{error}</p>}
+        </div>
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/[0.06]">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">Cancel</button>
+          <button
+            onClick={() => createMutation.mutate(form)}
+            disabled={createMutation.isPending || !form.name}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            Create playbook
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PlaybooksPage() {
   const qc = useQueryClient();
   const [triggerType, setTriggerType] = useState("");
   const [page, setPage] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["playbooks", { trigger_type: triggerType, page }],
@@ -52,15 +141,19 @@ export default function PlaybooksPage() {
 
   const executeMutation = useMutation({
     mutationFn: (id: string) => api.playbooks.execute(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["playbooks"] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["playbooks"] }),
   });
 
   const playbooks: Playbook[] = data?.data ?? [];
 
   return (
     <div className="flex flex-col h-full overflow-auto bg-surface-0">
+      {showCreate && (
+        <CreatePlaybookModal
+          onClose={() => setShowCreate(false)}
+          onSuccess={() => qc.invalidateQueries({ queryKey: ["playbooks"] })}
+        />
+      )}
       <Header title="Playbooks" subtitle="Automated response workflows" />
       <main className="flex-1 p-6">
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
@@ -75,13 +168,15 @@ export default function PlaybooksPage() {
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-medium rounded-lg transition-colors">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-medium rounded-lg transition-colors"
+          >
             <Plus className="w-4 h-4" />
             Create Playbook
           </button>
         </div>
 
-        {/* Playbook cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
@@ -96,6 +191,13 @@ export default function PlaybooksPage() {
               <Zap className="w-10 h-10 text-gray-700 mb-3" />
               <p className="text-gray-500 text-sm">No playbooks found</p>
               <p className="text-gray-600 text-xs mt-1">Create your first automated response playbook</p>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-surface-2 border border-white/[0.06] hover:border-white/[0.10] text-gray-300 text-sm font-medium rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Create first playbook
+              </button>
             </div>
           ) : (
             playbooks.map((pb) => (
@@ -129,7 +231,6 @@ export default function PlaybooksPage() {
                   </span>
                 </div>
 
-                {/* Actions list */}
                 <div className="space-y-1 mb-4">
                   {pb.actions.map((action, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs text-gray-400">

@@ -36,8 +36,12 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 export function Header({ title, subtitle }: HeaderProps) {
-  const claims = getClaims();
+  const [claims, setClaims] = useState<ReturnType<typeof getClaims>>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    setClaims(getClaims());
+  }, []);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
