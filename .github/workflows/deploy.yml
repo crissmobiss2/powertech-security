@@ -3,8 +3,6 @@ name: Deploy to Vercel
 on:
   push:
     branches: [master]
-    paths:
-      - 'frontend/**'
 
 jobs:
   deploy:
@@ -15,12 +13,25 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Deploy to Vercel Production
+      - name: Pull Vercel Environment
         working-directory: ./frontend
-        run: |
-          vercel deploy --prod --yes \
-            --scope crissmobiss2s-projects \
-            --token ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_5P6kmsTTVMW1CpIMeIJqug3F
+          VERCEL_PROJECT_ID: prj_VAOhR5rlnTA1FWIJH58x1LqVk1H6
+
+      - name: Build
+        working-directory: ./frontend
+        run: vercel build --prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_5P6kmsTTVMW1CpIMeIJqug3F
+          VERCEL_PROJECT_ID: prj_VAOhR5rlnTA1FWIJH58x1LqVk1H6
+
+      - name: Deploy to Production
+        working-directory: ./frontend
+        run: vercel deploy --prebuilt --prod
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: team_5P6kmsTTVMW1CpIMeIJqug3F
