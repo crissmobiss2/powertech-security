@@ -1,0 +1,27 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel Production
+        working-directory: ./frontend
+        run: |
+          vercel deploy --prod --yes \
+            --scope crissmobiss2s-projects \
+            --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_5P6kmsTTVMW1CpIMeIJqug3F
+          VERCEL_PROJECT_ID: prj_VAOhR5rlnTA1FWIJH58x1LqVk1H6
