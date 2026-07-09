@@ -109,7 +109,11 @@ export default function SettingsPage() {
         {claims?.role === "super_admin" && (
           <SectionCard title="System Configuration" icon={Database}>
             <FieldRow label="Environment">
-              <span className="text-xs px-2 py-0.5 bg-yellow-950 text-yellow-400 rounded-full font-medium">Development</span>
+              {process.env.NODE_ENV === "production" ? (
+                <span className="text-xs px-2 py-0.5 bg-green-950 text-green-400 rounded-full font-medium">Production</span>
+              ) : (
+                <span className="text-xs px-2 py-0.5 bg-yellow-950 text-yellow-400 rounded-full font-medium">Development</span>
+              )}
             </FieldRow>
             <FieldRow label="API Version">
               <span className="text-sm text-gray-400">v1</span>
