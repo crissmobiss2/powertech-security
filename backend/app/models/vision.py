@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func  # noqa: F401
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,7 +27,7 @@ class AuthorizedPerson(UUIDPrimaryKeyMixin, TimestampMixin, TenantMixin, Base):
     access_level: Mapped[str] = mapped_column(String(30), nullable=False, default="standard")  # restricted, standard, elevated, full
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")  # active, inactive, banned, expired
 
-    photo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    photo_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     extra: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
 

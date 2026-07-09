@@ -98,7 +98,22 @@ class FaceRecognitionService:
 
         fa = _get_insightface()
         if fa is None:
-            raise RuntimeError("InsightFace not available — cannot enroll face")
+            # InsightFace unavailable (no GPU server). Store a 200×200 thumbnail
+            # as the person's profile photo so the record is visually complete.
+            # ArcFace recognition will be enrolled on re-submission once available.
+            thumbnail = self._make_thumbnail(image, 200)
+            if thumbnail:
+                person.photo_url = thumbnail
+                await self.db.flush()
+            return {
+                "encoding_id": None,
+                "person_id": person_id,
+                "quality_score": None,
+                "encoding_model": "photo_only",
+                "is_primary": False,
+                "photo_only": True,
+                "message": "Photo stored. Face recognition encoding requires a GPU server with InsightFace.",
+            }
 
         faces = fa.get(image)
         if not faces:
@@ -144,6 +159,23 @@ class FaceRecognitionService:
             "estimated_age": int(face.age) if hasattr(face, "age") else None,
             "gender": "male" if face.gender == 1 else "female" if hasattr(face, "gender") else None,
         }
+
+    def _make_thumbnail(self, image: np.ndarray, size: int = 200) -> str | None:
+        """Resize image to size×size JPEG and return as a base64 data URL."""
+        try:
+            cv2 = _get_cv2()
+            h, w = image.shape[:2]
+            scale = size / max(h, w)
+            new_w, new_h = int(w * scale), int(h * scale)
+            resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            ok, buf = cv2.imencode(".jpg", resized, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if not ok:
+                return None
+            b64 = base64.b64encode(buf.tobytes()).decode()
+            return f"data:image/jpeg;base64,{b64}"
+        except Exception as e:
+            logger.debug("Thumbnail creation failed: %s", e)
+            return None
 
     def _decode_image(self, image_base64: str) -> np.ndarray:
         cv2 = _get_cv2()

@@ -96,7 +96,7 @@ export default function BiometricsPage() {
         </div>
 
         {/* Tab Content */}
-        {tab === "overview" && <BiometricOverview persons={personsList} />}
+        {tab === "overview" && <BiometricOverview persons={personsList} setTab={setTab} />}
         {tab === "face-enroll" && <FaceEnrollment persons={personsList} />}
         {tab === "fingerprint" && <FingerprintEnrollment />}
         {tab === "access-log" && <AccessLog />}
@@ -126,7 +126,7 @@ function BiometricStat({
   );
 }
 
-function BiometricOverview({ persons }: { persons: AuthorizedPerson[] }) {
+function BiometricOverview({ persons, setTab }: { persons: AuthorizedPerson[]; setTab: (t: Tab) => void }) {
   const enrolled = persons.filter((p) => p.face_encoding_count > 0);
   const notEnrolled = persons.filter((p) => p.face_encoding_count === 0);
 
@@ -205,17 +205,17 @@ function BiometricOverview({ persons }: { persons: AuthorizedPerson[] }) {
             Select a person and use one of the enrollment methods to register their biometric data.
           </p>
           <div className="space-y-2">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 hover:bg-brand-500/15 transition-colors text-xs font-semibold">
+            <button onClick={() => setTab("face-enroll")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 hover:bg-brand-500/15 transition-colors text-xs font-semibold">
               <Camera className="w-4 h-4" />
               Webcam Face Capture
               <ChevronRight className="w-3 h-3 ml-auto" />
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/15 transition-colors text-xs font-semibold">
+            <button onClick={() => setTab("face-enroll")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/15 transition-colors text-xs font-semibold">
               <Upload className="w-4 h-4" />
               Upload Photo
               <ChevronRight className="w-3 h-3 ml-auto" />
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/15 transition-colors text-xs font-semibold">
+            <button onClick={() => setTab("fingerprint")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/15 transition-colors text-xs font-semibold">
               <Fingerprint className="w-4 h-4" />
               Scan Fingerprint
               <ChevronRight className="w-3 h-3 ml-auto" />
@@ -249,11 +249,13 @@ function FaceEnrollment({ persons }: { persons: AuthorizedPerson[] }) {
   const [cameraActive, setCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
-  const [enrollResult, setEnrollResult] = useState<"success" | "error" | null>(null);
+  const [enrollResult, setEnrollResult] = useState<"success" | "photo_only" | "error" | null>(null);
+  const [enrollError, setEnrollError] = useState<string>("Enrollment failed");
   const [searchQuery, setSearchQuery] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   const stopCamera = useCallback(() => {
@@ -297,19 +299,39 @@ function FaceEnrollment({ persons }: { persons: AuthorizedPerson[] }) {
     stopCamera();
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setCapturedImage(result);
+      setEnrollResult(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
   async function enrollFace() {
     if (!selectedPerson || !capturedImage) return;
     setEnrolling(true);
     setEnrollResult(null);
     try {
       const base64 = capturedImage.split(",")[1];
-      await api.vision.persons.enroll(selectedPerson.id, {
+      const result = await api.vision.persons.enroll(selectedPerson.id, {
         image_base64: base64,
         is_primary: selectedPerson.face_encoding_count === 0,
       });
-      setEnrollResult("success");
       qc.invalidateQueries({ queryKey: ["vision-persons"] });
-    } catch {
+      if (result?.photo_only) {
+        setEnrollResult("photo_only");
+      } else {
+        setEnrollResult("success");
+      }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        ?? (err instanceof Error ? err.message : "Enrollment failed");
+      setEnrollError(msg);
       setEnrollResult("error");
     } finally {
       setEnrolling(false);
@@ -402,13 +424,23 @@ function FaceEnrollment({ persons }: { persons: AuthorizedPerson[] }) {
               </div>
               <div className="flex gap-2">
                 {!cameraActive && !capturedImage && (
-                  <button
-                    onClick={startCamera}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-brand-600/20 hover:shadow-brand-500/30 transition-all"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Start Camera
-                  </button>
+                  <>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-surface-3 border border-white/[0.06] text-gray-300 text-xs font-semibold rounded-xl hover:bg-surface-4 transition-all"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload Photo
+                    </button>
+                    <button
+                      onClick={startCamera}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-brand-600/20 hover:shadow-brand-500/30 transition-all"
+                    >
+                      <Camera className="w-4 h-4" />
+                      Start Camera
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -466,16 +498,25 @@ function FaceEnrollment({ persons }: { persons: AuthorizedPerson[] }) {
                     <div className="text-center">
                       <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto mb-3" />
                       <p className="text-xl font-bold text-emerald-300">Face Enrolled</p>
-                      <p className="text-sm text-emerald-400/70 mt-1">Encoding stored successfully</p>
+                      <p className="text-sm text-emerald-400/70 mt-1">ArcFace encoding stored</p>
+                    </div>
+                  </div>
+                )}
+                {enrollResult === "photo_only" && (
+                  <div className="absolute inset-0 bg-blue-950/70 flex items-center justify-center">
+                    <div className="text-center px-6">
+                      <CheckCircle className="w-16 h-16 text-blue-400 mx-auto mb-3" />
+                      <p className="text-xl font-bold text-blue-300">Photo Stored</p>
+                      <p className="text-sm text-blue-400/70 mt-1 max-w-[220px] mx-auto">Face recognition encoding requires a GPU server. Photo saved to profile.</p>
                     </div>
                   </div>
                 )}
                 {enrollResult === "error" && (
                   <div className="absolute inset-0 bg-red-950/70 flex items-center justify-center">
-                    <div className="text-center">
+                    <div className="text-center px-6">
                       <XCircle className="w-16 h-16 text-red-400 mx-auto mb-3" />
                       <p className="text-xl font-bold text-red-300">Enrollment Failed</p>
-                      <p className="text-sm text-red-400/70 mt-1">No face detected or server error</p>
+                      <p className="text-sm text-red-400/70 mt-1 max-w-[240px] mx-auto">{enrollError}</p>
                     </div>
                   </div>
                 )}
@@ -535,7 +576,7 @@ function FaceEnrollment({ persons }: { persons: AuthorizedPerson[] }) {
                       </button>
                     </>
                   )}
-                  {enrollResult && (
+                  {(enrollResult === "success" || enrollResult === "photo_only" || enrollResult === "error") && (
                     <button
                       onClick={() => { setCapturedImage(null); setEnrollResult(null); }}
                       className="px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-lg"

@@ -213,11 +213,13 @@ class FaceEnrollRequest(BaseModel):
     is_primary: bool = False
 
 class FaceEnrollResponse(BaseModel):
-    encoding_id: UUID
+    encoding_id: UUID | None = None
     person_id: UUID
-    quality_score: float | None
+    quality_score: float | None = None
     encoding_model: str
-    is_primary: bool
+    is_primary: bool = False
+    photo_only: bool = False
+    message: str | None = None
 
     model_config = {"from_attributes": True}
 
