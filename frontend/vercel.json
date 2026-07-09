@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://api.powertech-security.com"
+    "NEXT_PUBLIC_API_URL": "https://powertech-api-production.up.railway.app"
   },
   "headers": [
     {
