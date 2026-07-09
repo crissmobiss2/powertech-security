@@ -1,16 +1,13 @@
-import uuid
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Boolean, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.client import Client
 
 
 class Tenant(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -27,4 +24,3 @@ class Tenant(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     # Relationships
     users: Mapped[list["User"]] = relationship("User", back_populates="tenant")
-    clients: Mapped[list["Client"]] = relationship("Client", back_populates="tenant")

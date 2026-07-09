@@ -8,7 +8,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.tenant import Tenant
     from app.models.user import User
     from app.models.site import Site
     from app.models.contract import Contract
@@ -43,7 +42,6 @@ class Client(Base, UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin, SoftDeleteM
     notes: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
 
     # Relationships
-    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="clients")
     users: Mapped[list["User"]] = relationship("User", back_populates="client")
     sites: Mapped[list["Site"]] = relationship("Site", back_populates="client")
     contracts: Mapped[list["Contract"]] = relationship("Contract", back_populates="client")
